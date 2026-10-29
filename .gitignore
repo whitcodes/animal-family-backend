@@ -10,3 +10,4 @@ docs/swagger.json
 .harlequin.toml
 postman
 .postman
+.vscode
