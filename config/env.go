@@ -9,9 +9,12 @@ import (
 )
 
 // ENVIRONMENT must be set explicitly to one of these values - there is no
-// default. Only EnvDevelopment loads .env from disk via godotenv; EnvTest and
-// EnvProduction assume the process environment is already fully populated
-// (by the Makefile's shell-sourcing for test, or by ECS for production).
+// default. It is only a label (it picks defaults such as DB_SSL_MODE and drives
+// IsProduction); it does not decide where configuration comes from.
+//
+// Configuration is read from the process environment, which Doppler populates
+// in development and ECS populates in production. To use a .env file instead,
+// opt in by setting ENV_FILE to its path (see .env.example).
 const (
 	EnvDevelopment = "development"
 	EnvTest        = "test"
@@ -59,9 +62,11 @@ func initConfig() Config {
 			EnvDevelopment, EnvTest, EnvProduction, environment)
 	}
 
-	if environment == EnvDevelopment {
-		if err := godotenv.Load(); err != nil {
-			log.Fatal("Error loading .env file")
+	// godotenv.Load never overrides variables that are already set, so a value
+	// supplied by Doppler or the shell wins over the same key in the file.
+	if envFile := os.Getenv("ENV_FILE"); envFile != "" {
+		if err := godotenv.Load(envFile); err != nil {
+			log.Fatalf("ENV_FILE is set to %q but it could not be loaded: %v", envFile, err)
 		}
 	}
 
