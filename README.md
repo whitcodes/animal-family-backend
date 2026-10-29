@@ -8,8 +8,9 @@ A Go backend API for managing animal care tasks, enclosures, and related data.
 
 ## Prerequisites
 
-- Go 1.24 or later
-- PostgreSQL
+- Go 1.26 or later
+- Docker (for the local Postgres) or any PostgreSQL
+- [Doppler CLI](https://docs.doppler.com/docs/install-cli) (or a `.env` file)
 - Make (optional, for using Makefile commands)
 
 ## Running Locally
@@ -21,23 +22,39 @@ git clone https://github.com/whitallee/animal-family-backend.git
 cd animal-family-backend
 ```
 
-### 2. Set Up Environment Variables
+### 2. Configure Environment Variables
 
-Copy `.env.example` to `.env` and fill in real values:
+Configuration is read from the process environment. The default is
+[Doppler](https://www.doppler.com): `make run`, `make migrate-up` and friends
+run under `doppler run --`, so log in and link the repo once:
+
+```bash
+doppler login
+doppler setup   # project: backend, config: dev
+```
+
+**Without Doppler**, copy `.env.example` to `.env`, fill in real values, and
+pass `ENV_FILE` to any make target:
 
 ```bash
 cp .env.example .env
+make run ENV_FILE=.env
 ```
 
 See `.env.example` for the full list of variables and their defaults.
 
 ### 3. Set Up Database
 
-Ensure PostgreSQL is running and create the database:
+Run a local Postgres in Docker (data persists in a named volume):
 
 ```bash
-createdb animal_family
+make db-up
 ```
+
+Then set `DB_HOST=localhost`, `DB_PORT=5432`, `DB_USER=postgres`,
+`DB_PASSWORD=postgres`, `DB_NAME=brindl_dev` and `DB_SSL_MODE=disable` in your
+Doppler `dev` config (or `.env`). Any other Postgres works too. Don't point
+`dev` at a database you care about: `make migrate-down` drops tables.
 
 ### 4. Run Migrations
 
@@ -45,6 +62,7 @@ Run database migrations and seed data:
 
 ```bash
 make migrate-up
+make seed
 ```
 
 ### 5. Build and Run
@@ -55,11 +73,11 @@ Using Make:
 make run
 ```
 
-Or manually:
+Or manually, with the variables already in your environment:
 
 ```bash
 go build -o bin/animal-family-backend cmd/main.go
-./bin/animal-family-backend
+ENVIRONMENT=development doppler run -- ./bin/animal-family-backend
 ```
 
 The API server will start on `http://localhost:8080`.
@@ -75,8 +93,9 @@ Runs `gofmt` + `go vet` before each commit.
 ## Available Make Commands
 
 - `make build` - Build the application
-- `make run` - Build and run the application
-- `make test` - Run all tests
+- `make run` - Build and run the application (under Doppler; add `ENV_FILE=.env` to use a file)
+- `make test` - Run all tests (needs no database or secrets)
+- `make db-up` / `make db-down` / `make db-psql` - Start, stop, or open a shell in the local Postgres container
 - `make migrate-up` - Run database migrations and seed data
 - `make migrate-down` - Rollback database migrations
 - `make seed` - Seed the database with initial data
