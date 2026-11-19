@@ -127,14 +127,3 @@ The v2 contract is generated from annotations on the handlers into
 ## Database Schema
 
 [Entity Relationship Diagram](https://docs.google.com/drawings/d/1Vi1yngr4CeXXt-slRGJsLI35_R-y-oIHlZ466be_wx8/edit?usp=sharing)
-
-## Development Status
-
-- ✅ User
-- ✅ Habitat
-- ✅ Species
-- ✅ Enclosure
-- ✅ Animal
-- 🔄 Task (in progress)
-
-See [TODO.md](TODO.md) for planned features and known technical debt.
